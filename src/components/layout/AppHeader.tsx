@@ -1,12 +1,6 @@
-
+"use client";
 import { useState } from "react";
-import { 
-  Bell, 
-  ChevronDown, 
-  Search, 
-  Menu, 
-  X,
-} from "lucide-react";
+import { Bell, ChevronDown, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,7 +38,7 @@ const AppHeader = () => {
           </Button>
         </SidebarTrigger>
       </div>
-      
+
       <div className="flex flex-1 items-center gap-4">
         <form className="hidden flex-1 lg:block">
           <div className="relative">
@@ -56,7 +50,7 @@ const AppHeader = () => {
             />
           </div>
         </form>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-1">
@@ -79,14 +73,14 @@ const AppHeader = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive"></span>
           <span className="sr-only">Notifications</span>
         </Button>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">

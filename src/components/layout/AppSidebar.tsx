@@ -1,6 +1,7 @@
-
+"use client";
 import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/shared/Logo";
+import Link from "next/link";
 
 interface NavItemProps {
   to: string;
@@ -38,7 +40,7 @@ interface NavItemProps {
 const NavItem = ({ to, icon, children, active }: NavItemProps) => (
   <SidebarMenuItem>
     <SidebarMenuButton asChild className={active ? "bg-sidebar-accent" : ""}>
-      <Link to={to} className="flex items-center gap-2">
+      <Link href={to} className="flex items-center gap-2">
         {icon}
         <span>{children}</span>
       </Link>
@@ -47,13 +49,12 @@ const NavItem = ({ to, icon, children, active }: NavItemProps) => (
 );
 
 export function AppSidebar() {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const pathname = usePathname();
 
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="flex items-center justify-center border-b pb-4 pt-5">
-        <Link to="/">
+        <Link href="/">
           <Logo />
         </Link>
       </SidebarHeader>
@@ -61,52 +62,52 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent className="px-2">
             <SidebarMenu>
-              <NavItem 
-                to="/" 
-                icon={<LayoutDashboard size={20} />} 
-                active={currentPath === "/"}
+              <NavItem
+                to="/"
+                icon={<LayoutDashboard size={20} />}
+                active={pathname === "/"}
               >
                 Dashboard
               </NavItem>
-              <NavItem 
-                to="/services" 
-                icon={<SprayCan size={20} />} 
-                active={currentPath.startsWith("/services")}
+              <NavItem
+                to="/services"
+                icon={<SprayCan size={20} />}
+                active={pathname.startsWith("/services")}
               >
                 Services
               </NavItem>
-              <NavItem 
-                to="/bookings" 
-                icon={<Calendar size={20} />} 
-                active={currentPath.startsWith("/bookings")}
+              <NavItem
+                to="/bookings"
+                icon={<Calendar size={20} />}
+                active={pathname.startsWith("/bookings")}
               >
                 Bookings
               </NavItem>
-              <NavItem 
-                to="/captains" 
-                icon={<User size={20} />} 
-                active={currentPath.startsWith("/captains")}
+              <NavItem
+                to="/captains"
+                icon={<User size={20} />}
+                active={pathname.startsWith("/captains")}
               >
                 Captains
               </NavItem>
-              <NavItem 
-                to="/customers" 
-                icon={<Users size={20} />} 
-                active={currentPath.startsWith("/customers")}
+              <NavItem
+                to="/customers"
+                icon={<Users size={20} />}
+                active={pathname.startsWith("/customers")}
               >
                 Customers
               </NavItem>
-              <NavItem 
-                to="/jobs" 
-                icon={<ClipboardList size={20} />} 
-                active={currentPath.startsWith("/jobs")}
+              <NavItem
+                to="/jobs"
+                icon={<ClipboardList size={20} />}
+                active={pathname.startsWith("/jobs")}
               >
                 Today's Jobs
               </NavItem>
-              <NavItem 
-                to="/settings" 
-                icon={<Settings size={20} />} 
-                active={currentPath.startsWith("/settings")}
+              <NavItem
+                to="/settings"
+                icon={<Settings size={20} />}
+                active={pathname.startsWith("/settings")}
               >
                 Settings
               </NavItem>
