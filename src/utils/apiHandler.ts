@@ -34,6 +34,7 @@ const apiRequest = async <ResponseType>(
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
+
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, response.url);
     }

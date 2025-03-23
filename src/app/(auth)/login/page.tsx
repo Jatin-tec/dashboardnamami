@@ -19,18 +19,25 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import Link from "next/link"
+import Image from "next/image"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string(),
 });
 
+interface LoginFormProps extends React.ComponentProps<"div"> {
+  next?: string;
+}
+
 export default function LoginForm({
   className,
+  next,
   ...props
-}: React.ComponentProps<"div">) {
+}: LoginFormProps) {
   const { toast } = useToast();
-  const router = useRouter();
+  const router = useRouter(); 
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -41,7 +48,6 @@ export default function LoginForm({
   });
 
   const onSubmit = async () => {
-    console.log(form.getValues())
     const state = await login(form.getValues());
     if (state.message) {
       toast({
@@ -50,7 +56,11 @@ export default function LoginForm({
       });
     }
     if (state.status === "success") {
-      next ? router.push(next) : router.push("/");
+      if (next) {
+        router.push(next);
+      } else {
+        router.push("/");
+      }
     }
   };
 
@@ -102,8 +112,12 @@ export default function LoginForm({
                           </Link>
                         </div>
                         <FormControl>
-                        <Input id="password" type="password" required />
-                      </FormControl>
+                          <Input 
+                          id="password" 
+                          type="password" 
+                          {...field}
+                          required />
+                        </FormControl>
                       </div>
                     </FormItem>
                   )} />
@@ -120,17 +134,19 @@ export default function LoginForm({
             </form>
           </Form>
           <div className="relative hidden bg-muted md:block">
-            <img
+            <Image
               src="/placeholder.svg"
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              height={500}
+              width={500}
             />
           </div>
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <Link href="#">Terms of Service</Link>{" "}
+        and <Link href="#">Privacy Policy</Link>.
       </div>
     </div>
   )

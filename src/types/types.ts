@@ -10,3 +10,37 @@ export interface UserResponse {
         refresh: string;
     };
 }
+
+export interface User {
+    name: string;
+    email: string;
+    role: string;
+    phone_number: string;
+}
+
+export interface Service {
+    city: string;
+    service_code: string;
+    name: string;
+    description: string;
+    icon: string;
+    is_active: boolean;
+}
+
+export interface SubscriptionType {
+    id: number;
+    service: Service;
+    name: string;
+    frequency: string;
+    price: number;
+    is_active: boolean;
+}
+
+export interface Subscription {
+    id: number;
+    user: User;
+    subscription_type: SubscriptionType;
+    start_date: string;
+    end_date: string;
+    status: string;
+}

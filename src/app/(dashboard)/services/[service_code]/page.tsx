@@ -1,3 +1,4 @@
+'use client'
 import { useRouter } from 'next/navigation';
 import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -21,17 +22,17 @@ const ServiceDetail = () => {
   // Find the service by ID
   const service = servicesList.find((s) => s.id.toString() === id);
 
-  if (!service) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <h2 className="text-2xl font-bold">Service Not Found</h2>
-        <p className="mt-2 text-muted-foreground">The service you're looking for doesn't exist.</p>
-        <Button className="mt-4" onClick={() => router.push("/services")}>
-          Back to Services
-        </Button>
-      </div>
-    );
-  }
+  // if (!service) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center py-12">
+  //       <h2 className="text-2xl font-bold">Service Not Found</h2>
+  //       <p className="mt-2 text-muted-foreground">The service you're looking for doesn't exist.</p>
+  //       <Button className="mt-4" onClick={() => router.push("/services")}>
+  //         Back to Services
+  //       </Button>
+  //     </div>
+  //   );
+  // }
 
   const handleEdit = () => {
     toast({

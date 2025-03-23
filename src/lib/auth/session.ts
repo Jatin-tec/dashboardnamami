@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { encrypt, decrypt } from "@/utils/auth";
 import { apiPost } from "@/utils/apiHandler";
 import { catchError } from "@/utils/catchError";
+import { UserResponse } from "@/types/types";
 
 interface loginForm {
     email: string,
@@ -14,8 +15,8 @@ export async function login(formData: loginForm) {
         email: formData.email,
         password: formData.password,
     };
-    console.log(user, formData)
-    const [error, response] = await catchError(apiPost("/api/auth/login/", user));
+    const [error, response] = await catchError(apiPost<loginForm, UserResponse>("/api/auth/login/", user));
+    console.log(error, response, 'error, response');
     if (error) return { message: error.status === 401 ? "Invalid email or password" : error.message, status: "destructive" };
     if (response) {
         const cookieStore = await cookies();
@@ -29,6 +30,7 @@ export async function login(formData: loginForm) {
         });
         return { message: "Login successful", status: "success" };
     }
+    return { message: "An error occurred", status: "destructive" };
 }
 
 export async function getSession() {

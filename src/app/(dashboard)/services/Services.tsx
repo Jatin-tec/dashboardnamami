@@ -1,8 +1,9 @@
+'use client'
 
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Grid3X3, List, Filter } from "lucide-react";
+import { PlusCircle, Grid3X3, List } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,15 +16,26 @@ import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CardGrid from "@/components/shared/CardGrid";
+import { Badge } from "@/components/ui/badge";
+
+import { SubscriptionType } from "@/types/types";
+
+import { cn } from "@/lib/utils";
 
 import { servicesList, serviceCategories, statusOptions } from "@/data/mock";
 
-const Services = () => {
+const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null }) => {
+
+  console.log(subscriptions)
+
   const { toast } = useToast();
+
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("all");
+
+  console.log(subscriptions, 'subscriptions');
 
   const handleCreateService = () => {
     toast({
@@ -33,8 +45,8 @@ const Services = () => {
     setIsCreateDialogOpen(false);
   };
 
-  const handleViewService = (service: any) => {
-    router.push(`/services/${service.id}`);
+  const handleViewService = (subscription: SubscriptionType) => {
+    router.push(`/services/${subscription.id}`);
   };
 
   const handleEditService = (service: any) => {
@@ -124,24 +136,32 @@ const Services = () => {
           <TabsContent value="all" className="mt-4">
             {viewMode === "grid" ? (
               <CardGrid columns={3}>
-                {servicesList.map((service) => (
-                  <Card key={service.id} className="overflow-hidden">
+                {subscriptions?.map((subscription) => (
+                  <Card key={subscription.id} className="overflow-hidden">
                     <CardHeader className="p-4">
-                      <CardTitle className="text-base">{service.name}</CardTitle>
-                      <CardDescription>{service.category}</CardDescription>
+                      <CardTitle className="text-base">{subscription.service.name}</CardTitle>
+                      <CardDescription>{subscription.service.service_code}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
                       <div className="grid gap-1">
-                        <div className="text-sm">{service.description}</div>
+                        <div className="text-sm">{subscription.service.description}</div>
                         <div className="flex items-center justify-between pt-2">
-                          <span className="font-semibold">{service.price}</span>
-                          <span className="text-sm text-muted-foreground">{service.duration}</span>
+                          <span className="font-semibold">{subscription.price}</span>
+                          <span className="text-sm text-muted-foreground">{subscription.frequency}</span>
                         </div>
                       </div>
                     </CardContent>
                     <CardFooter className="flex justify-between p-4 pt-0">
-                      <StatusBadge status={service.status} />
-                      <Button size="sm" onClick={() => handleViewService(service)}>View</Button>
+                      <Badge variant="outline" className={cn(
+                        "capitalize font-medium",
+                        subscription.is_active
+                          ? 'bg-green-100 text-green-800 hover:bg-green-100/80'
+                          : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+                      )}
+                      >
+                        {subscription.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Button size="sm" onClick={() => handleViewService(subscription)}>View</Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -149,7 +169,7 @@ const Services = () => {
             ) : (
               <DataTable
                 columns={columns}
-                data={servicesList}
+                data={subscriptions || []}
                 onRowClick={handleViewService}
                 onView={handleViewService}
                 onEdit={handleEditService}
@@ -166,8 +186,7 @@ const Services = () => {
             <TabsContent key={category.id} value={category.name.toLowerCase()} className="mt-4">
               {viewMode === "grid" ? (
                 <CardGrid columns={3}>
-                  {servicesList
-                    .filter((service) => service.category === category.name)
+                  {subscriptions?.filter((service) => service.category === category.name)
                     .map((service) => (
                       <Card key={service.id} className="overflow-hidden">
                         <CardHeader className="p-4">
@@ -193,7 +212,7 @@ const Services = () => {
               ) : (
                 <DataTable
                   columns={columns}
-                  data={servicesList.filter((service) => service.category === category.name)}
+                  data={subscriptions?.filter((service) => service.category === category.name)}
                   onRowClick={handleViewService}
                   onView={handleViewService}
                   onEdit={handleEditService}
