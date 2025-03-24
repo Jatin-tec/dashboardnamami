@@ -39,8 +39,21 @@ export interface SubscriptionType {
 export interface Subscription {
     id: number;
     user: User;
+    captain: User;
     subscription_type: SubscriptionType;
     start_date: string;
     end_date: string;
     status: string;
+}
+
+export type BookingStatus = 'scheduled' | 'ongoing' | 'completed' | 'expired';
+
+export interface Booking {
+    booking_id: number;
+    user: User;
+    captain: User | null;
+    subscription_type: SubscriptionType;
+    status: BookingStatus;
+    start_date: string;
+    end_date: string;
 }

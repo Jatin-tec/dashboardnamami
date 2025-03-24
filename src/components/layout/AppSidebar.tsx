@@ -102,7 +102,7 @@ export function AppSidebar() {
                 icon={<ClipboardList size={20} />}
                 active={pathname.startsWith("/jobs")}
               >
-                Today's Jobs
+                Today&apos;s Jobs
               </NavItem>
               <NavItem
                 to="/settings"

@@ -1,6 +1,5 @@
 'use client'
-
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Grid3X3, List } from "lucide-react";
@@ -18,15 +17,13 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import CardGrid from "@/components/shared/CardGrid";
 import { Badge } from "@/components/ui/badge";
 
-import { SubscriptionType } from "@/types/types";
+import { Service, SubscriptionType } from "@/types/types";
 
 import { cn } from "@/lib/utils";
 
-import { servicesList, serviceCategories, statusOptions } from "@/data/mock";
+import { statusOptions } from "@/data/mock";
 
 const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null }) => {
-
-  console.log(subscriptions)
 
   const { toast } = useToast();
 
@@ -35,7 +32,14 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("all");
 
-  console.log(subscriptions, 'subscriptions');
+  console.log(subscriptions)
+
+
+  const serviceCategories = useMemo(() => {
+    const uniqueServices = new Set(subscriptions?.map(sub => sub.service.name));
+    return Array.from(uniqueServices);
+  }, [subscriptions]);
+
 
   const handleCreateService = () => {
     toast({
@@ -49,17 +53,17 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
     router.push(`/services/${subscription.id}`);
   };
 
-  const handleEditService = (service: any) => {
+  const handleEditService = (subscriptions: SubscriptionType) => {
     toast({
       title: "Edit service",
-      description: `Editing service: ${service.name}`,
+      description: `Editing service: ${subscriptions.name}`,
     });
   };
 
-  const handleDeleteService = (service: any) => {
+  const handleDeleteService = (subscriptions: SubscriptionType) => {
     toast({
       title: "Service deleted",
-      description: `Service ${service.name} has been deleted.`,
+      description: `Service ${subscriptions.name} has been deleted.`,
       variant: "destructive",
     });
   };
@@ -70,21 +74,28 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
       label: "Service Name",
     },
     {
-      key: "category",
+      key: "service",
       label: "Category",
+      render: (value: Service) => <span className="capitalize">{value.name}</span>
     },
     {
       key: "price",
       label: "Price",
     },
     {
-      key: "duration",
-      label: "Duration",
+      key: "frequency",
+      label: "Frequency",
     },
     {
-      key: "status",
+      key: "is_active",
       label: "Status",
-      render: (value: string) => <StatusBadge status={value} />,
+      render: (value: string) => <Badge variant="outline" className={cn(
+        "capitalize font-medium",
+        value ? 'bg-green-100 text-green-800 hover:bg-green-100/80' : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+      )}
+      >
+        {value ? 'Active' : 'Inactive'}
+      </Badge>
     },
   ];
 
@@ -105,9 +116,9 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="all">All Services</TabsTrigger>
-              {serviceCategories.map((category) => (
-                <TabsTrigger key={category.id} value={category.name.toLowerCase()}>
-                  {category.name}
+              {serviceCategories.map((category, idx) => (
+                <TabsTrigger key={idx} value={category}>
+                  {category}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -139,8 +150,8 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
                 {subscriptions?.map((subscription) => (
                   <Card key={subscription.id} className="overflow-hidden">
                     <CardHeader className="p-4">
-                      <CardTitle className="text-base">{subscription.service.name}</CardTitle>
-                      <CardDescription>{subscription.service.service_code}</CardDescription>
+                      <CardTitle className="text-base">{subscription.name}</CardTitle>
+                      <CardDescription>{subscription.service.name}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
                       <div className="grid gap-1">
@@ -183,27 +194,35 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
           </TabsContent>
 
           {serviceCategories.map((category) => (
-            <TabsContent key={category.id} value={category.name.toLowerCase()} className="mt-4">
+            <TabsContent key={category} value={category} className="mt-4">
               {viewMode === "grid" ? (
                 <CardGrid columns={3}>
-                  {subscriptions?.filter((service) => service.category === category.name)
+                  {subscriptions?.filter((subscription) => subscription.service.name === category)
                     .map((service) => (
                       <Card key={service.id} className="overflow-hidden">
                         <CardHeader className="p-4">
                           <CardTitle className="text-base">{service.name}</CardTitle>
-                          <CardDescription>{service.category}</CardDescription>
+                          <CardDescription>{service.service.name}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                           <div className="grid gap-1">
-                            <div className="text-sm">{service.description}</div>
+                            <div className="text-sm">{service.service.description}</div>
                             <div className="flex items-center justify-between pt-2">
                               <span className="font-semibold">{service.price}</span>
-                              <span className="text-sm text-muted-foreground">{service.duration}</span>
+                              <span className="text-sm text-muted-foreground">{service.frequency}</span>
                             </div>
                           </div>
                         </CardContent>
                         <CardFooter className="flex justify-between p-4 pt-0">
-                          <StatusBadge status={service.status} />
+                          <Badge variant="outline" className={cn(
+                            "capitalize font-medium",
+                            service.is_active
+                              ? 'bg-green-100 text-green-800 hover:bg-green-100/80'
+                              : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+                          )}
+                          >
+                            {service.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
                           <Button size="sm" onClick={() => handleViewService(service)}>View</Button>
                         </CardFooter>
                       </Card>
@@ -212,7 +231,7 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
               ) : (
                 <DataTable
                   columns={columns}
-                  data={subscriptions?.filter((service) => service.category === category.name)}
+                  data={subscriptions?.filter((service) => service.service.name === category) || []}
                   onRowClick={handleViewService}
                   onView={handleViewService}
                   onEdit={handleEditService}
@@ -257,8 +276,8 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
                 </SelectTrigger>
                 <SelectContent>
                   {serviceCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      {category.name}
+                    <SelectItem key={category} value={category}>
+                      {category}
                     </SelectItem>
                   ))}
                 </SelectContent>
