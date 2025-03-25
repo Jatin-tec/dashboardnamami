@@ -18,6 +18,17 @@ export interface User {
   phone_number: string;
 }
 
+export interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone_number: string;
+  address: string;
+  is_active: boolean;
+  state: string;
+  city: string;
+}
+
 export interface Service {
   city: string;
   service_code: string;

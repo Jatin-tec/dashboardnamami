@@ -1,7 +1,7 @@
+'use client'
 import { useRouter } from 'next/navigation';
-import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar, BarChart } from "lucide-react";
+import { ArrowLeft, Edit, Phone, Mail, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,21 +9,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import StatusBadge from "@/components/shared/StatusBadge";
-import { customersData, bookingsData } from "@/data/mock";
+import { Badge } from "@/components/ui/badge";
 
-const CustomerDetail = () => {
-  const { id } = useParams<{ id: string }>();
+import { bookingsData } from "@/data/mock";
+import { Customer } from '@/types/types';
+
+import { cn } from "@/lib/utils";
+
+
+const CustomerDetail = ({ customer }: { customer: Customer | null }) => {
   const router = useRouter();
   const { toast } = useToast();
-
-  // Find the customer by ID
-  const customer = customersData.find((c) => c.id.toString() === id);
 
   if (!customer) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <h2 className="text-2xl font-bold">Customer Not Found</h2>
-        <p className="mt-2 text-muted-foreground">The customer you're looking for doesn't exist.</p>
+        <p className="mt-2 text-muted-foreground">The customer you&apos;re looking for doesn&apos;t exist.</p>
         <Button className="mt-4" onClick={() => router.push("/customers")}>
           Back to Customers
         </Button>
@@ -78,7 +80,13 @@ const CustomerDetail = () => {
               </Avatar>
               <h2 className="mt-4 text-xl font-bold">{customer.name}</h2>
               <div className="mt-2 flex items-center">
-                <StatusBadge status={customer.status} />
+                <Badge variant="outline" className={cn(
+                  "capitalize font-medium",
+                  customer.is_active ? 'bg-green-100 text-green-800 hover:bg-green-100/80' : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+                )}
+                >
+                  {customer.is_active ? 'Active' : 'Inactive'}
+                </Badge>
               </div>
             </div>
 
@@ -89,7 +97,7 @@ const CustomerDetail = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-muted-foreground" />
-                <span>{customer.phone}</span>
+                <span>{customer.phone_number}</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -212,7 +220,7 @@ const CustomerDetail = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="rounded-lg border p-4">
                       <h3 className="font-medium">Preferred Time Slots</h3>
                       <div className="mt-2 space-y-2">
@@ -230,7 +238,7 @@ const CustomerDetail = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="rounded-lg border p-4">
                       <h3 className="font-medium">Communication Preferences</h3>
                       <div className="mt-2 space-y-2">
