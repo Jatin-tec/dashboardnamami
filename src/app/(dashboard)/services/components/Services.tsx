@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import StatusBadge from "@/components/shared/StatusBadge";
 import CardGrid from "@/components/shared/CardGrid";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,7 +32,6 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
   const [selectedTab, setSelectedTab] = useState("all");
 
   console.log(subscriptions)
-
 
   const serviceCategories = useMemo(() => {
     const uniqueServices = new Set(subscriptions?.map(sub => sub.service.name));
