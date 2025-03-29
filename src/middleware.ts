@@ -6,11 +6,13 @@ import { hasAccess } from "@/config/rolePermissions";
 const publicRoutes = [
   "/login",
   "/services",
-  "/captain",
+  "/captains",
   "/customers",
   "/bookings",
   "/dashboard",
   "/settings",
+  "/jobs",
+  "/",
 ];
 
 // Middleware logic
