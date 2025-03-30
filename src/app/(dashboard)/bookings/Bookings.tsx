@@ -257,16 +257,6 @@ const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Address
-              </Label>
-              <Input
-                id="address"
-                placeholder="Full address"
-                className="col-span-3"
-              />
-            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
