@@ -5,5 +5,7 @@ export default async function Page({ params }: { params: Promise<{ service_code:
   const { service_code } = await params;
   const subscription = await getServicesId(service_code);
 
-  return <ServiceDetail subscription={subscription.data?.[0] ?? null} />
+  console.log("subscription", subscription);
+
+  return <ServiceDetail subscription={subscription.data} />
 }

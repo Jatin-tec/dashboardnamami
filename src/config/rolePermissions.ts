@@ -2,6 +2,7 @@
 
 export const roleRoutes = {
     admin: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized"],
+    customer: [""],
     manager: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized"],
     captain: ["/pos/*", "/table", "/unauthorized"],
 };

@@ -1,35 +1,88 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Calendar, Clock, CheckCheck } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatusBadge from "@/components/shared/StatusBadge";
+import BookingForm from "@/components/forms/BookingForm";
+import AssignCaptainForm from "@/components/forms/AssignCaptainForm";
 
-import { captainsData, servicesList, statusOptions } from "@/data/mock";
-import { Booking, Service, SubscriptionType, User } from "@/types/types";
+import {
+  bookingsData,
+  captainsData,
+  servicesList,
+  statusOptions,
+  customersData,
+} from "@/data/mock";
 
-const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
+// Sample subscription types for demo
+const subscriptionTypesData = [
+  {
+    id: 1,
+    name: "Weekly",
+    service: { service_code: "SERV1", name: "Home Cleaning" },
+  },
+  {
+    id: 2,
+    name: "Bi-weekly",
+    service: { service_code: "SERV1", name: "Home Cleaning" },
+  },
+  {
+    id: 3,
+    name: "Monthly",
+    service: { service_code: "SERV1", name: "Home Cleaning" },
+  },
+  {
+    id: 4,
+    name: "Premium",
+    service: { service_code: "SERV2", name: "Car Wash" },
+  },
+  {
+    id: 5,
+    name: "Basic",
+    service: { service_code: "SERV2", name: "Car Wash" },
+  },
+];
+
+// Convert customers data to match the expected format with string IDs
+const customersForBooking = customersData.map((c) => ({
+  id: String(c.id),
+  username: c.name,
+}));
+
+// Convert captains data to match the expected format with string IDs
+const captainsForBooking = captainsData.map((c) => ({
+  id: String(c.id),
+  username: c.name,
+}));
+
+// Convert services data to match the expected format
+const servicesForBooking = servicesList.map((s) => ({
+  service_code: s.id.toString(),
+  name: s.name,
+}));
+
+const Bookings = () => {
   const { toast } = useToast();
   const router = useRouter();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isAssignCaptainDialogOpen, setIsAssignCaptainDialogOpen] =
+    useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
-  console.log(bookings);
-
-  const handleCreateBooking = () => {
+  const handleCreateBooking = (data: any) => {
+    console.log("New booking data:", data);
     toast({
       title: "Booking created",
       description: "New booking has been created successfully.",
@@ -37,64 +90,83 @@ const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
     setIsCreateDialogOpen(false);
   };
 
-  const handleViewBooking = (booking: Booking) => {
-    router.push(`/bookings/${booking.booking_id}`);
+  const handleViewBooking = (booking: any) => {
+    router.push(`/bookings/${booking.id}`);
   };
 
-  const handleEditBooking = (booking: Booking) => {
+  const handleEditBooking = (booking: any) => {
     toast({
       title: "Edit booking",
-      description: `Editing booking: ${booking.booking_id}`,
+      description: `Editing booking: ${booking.id}`,
     });
   };
 
-  const handleDeleteBooking = (booking: Booking) => {
+  const handleDeleteBooking = (booking: any) => {
     toast({
       title: "Booking deleted",
-      description: `Booking ${booking.booking_id} has been deleted.`,
+      description: `Booking ${booking.id} has been deleted.`,
       variant: "destructive",
     });
   };
 
+  const handleAssignCaptain = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsAssignCaptainDialogOpen(true);
+  };
+
+  const handleCaptainAssigned = (data: { captain: string }) => {
+    toast({
+      title: "Captain assigned",
+      description: `Captain has been assigned to booking ${selectedBooking?.id}`,
+    });
+    setIsAssignCaptainDialogOpen(false);
+  };
+
   const columns = [
     {
-      key: "booking_id",
+      key: "id",
       label: "Booking ID",
     },
     {
-      key: "user",
+      key: "customer",
       label: "Customer",
-      render: (value: User) => (
-        <div>{value.email}</div>
-      ),
     },
     {
-      key: "subscription_type",
+      key: "service",
       label: "Service",
-      render: (value: SubscriptionType) => (
-        <div>{value.service.name}</div>
-      ),
     },
     {
-      key: "created_at",
+      key: "date",
       label: "Date",
-      render: (value: string) => (
-        <div>{new Date(value).toDateString()}</div>
+      render: (value: string, row: any) => (
+        <div>
+          {value} - {row.time}
+        </div>
       ),
     },
     {
       key: "captain",
       label: "Captain",
-      render: (value: User) => (
-        <div>{value?.email || '-' }</div>
-      ),
+      render: (value: string, row: any) => {
+        if (!value || value === "Unassigned") {
+          return (
+            <button
+              className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAssignCaptain(row);
+              }}
+            >
+              Assign Captain
+            </button>
+          );
+        }
+        return value;
+      },
     },
     {
-      key: "subscription_type",
+      key: "amount",
       label: "Amount",
-      render: (value: SubscriptionType) => (
-        <div>{value.price}</div>
-      ),
     },
     {
       key: "status",
@@ -136,9 +208,9 @@ const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
-          {bookings && <DataTable
+          <DataTable
             columns={columns}
-            data={bookings}
+            data={bookingsData}
             onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
@@ -147,125 +219,87 @@ const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
               key: "status",
               options: statusOptions.booking,
             }}
-          />}
+          />
         </TabsContent>
 
         <TabsContent value="scheduled" className="mt-6">
-          {bookings && <DataTable
+          <DataTable
             columns={columns}
-            data={bookings.filter((booking) => booking.status === "scheduled")}
+            data={bookingsData.filter(
+              (booking) => booking.status === "scheduled",
+            )}
             onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
-          />}
+          />
         </TabsContent>
 
         <TabsContent value="ongoing" className="mt-6">
-          {bookings && <DataTable
+          <DataTable
             columns={columns}
-            data={bookings.filter((booking) => booking.status === "ongoing")}
+            data={bookingsData.filter(
+              (booking) => booking.status === "ongoing",
+            )}
             onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
-          />}
+          />
         </TabsContent>
 
         <TabsContent value="completed" className="mt-6">
-          {bookings && <DataTable
+          <DataTable
             columns={columns}
-            data={bookings.filter((booking) => booking.status === "completed")}
+            data={bookingsData.filter(
+              (booking) => booking.status === "completed",
+            )}
             onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
-          />}
+          />
         </TabsContent>
       </Tabs>
 
+      {/* New Booking Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>Create New Booking</DialogTitle>
             <DialogDescription>
               Book a new cleaning service for a customer.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="customer" className="text-right">
-                Customer
-              </Label>
-              <Input
-                id="customer"
-                placeholder="Customer name"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="service" className="text-right">
-                Service
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {servicesList.map((service) => (
-                    <SelectItem key={service.id} value={service.name}>
-                      {service.name} - {service.price}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
-                Date
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="time" className="text-right">
-                Time
-              </Label>
-              <Input
-                id="time"
-                type="time"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="captain" className="text-right">
-                Captain
-              </Label>
-              <Select>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select captain" />
-                </SelectTrigger>
-                <SelectContent>
-                  {captainsData.map((captain) => (
-                    <SelectItem key={captain.id} value={captain.name}>
-                      {captain.name} - {captain.specialization}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateBooking}>
-              Create Booking
-            </Button>
-          </div>
+          <BookingForm
+            customers={customersForBooking}
+            services={servicesForBooking}
+            captains={captainsForBooking}
+            subscriptionTypes={subscriptionTypesData}
+            onSubmit={handleCreateBooking}
+            onCancel={() => setIsCreateDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Captain Dialog */}
+      <Dialog
+        open={isAssignCaptainDialogOpen}
+        onOpenChange={setIsAssignCaptainDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Assign Captain</DialogTitle>
+            <DialogDescription>
+              Assign a captain to booking #{selectedBooking?.id}
+            </DialogDescription>
+          </DialogHeader>
+          <AssignCaptainForm
+            bookingId={selectedBooking?.id || ""}
+            captains={captainsForBooking}
+            onSubmit={handleCaptainAssigned}
+            onCancel={() => setIsAssignCaptainDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </>

@@ -10,7 +10,7 @@ export const getSubscriptions = async (): Promise<ActionResponse<SubscriptionTyp
     return response;
 };
 
-export const getServicesId = async (id: string): Promise<ActionResponse<SubscriptionType[] | null>> => {
-    const response = await fetchWithSession<null, SubscriptionType[]>(apiGet, `/api/service/subscription-type/${id}`);
+export const getServicesId = async (id: string): Promise<ActionResponse<SubscriptionType | null>> => {
+    const response = await fetchWithSession<null, SubscriptionType>(apiGet, `/api/service/subscription-type/${id}`);
     return response;
 }

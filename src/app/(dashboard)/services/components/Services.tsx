@@ -148,7 +148,7 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
                 {subscriptions?.map((subscription) => (
                   <Card key={subscription.id} className="overflow-hidden">
                     <CardHeader className="p-4">
-                      <CardTitle className="text-base">{subscription.name}</CardTitle>
+                      <CardTitle className="text-base">{subscription.name} ({subscription.city})</CardTitle>
                       <CardDescription>{subscription.service.name}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
@@ -199,7 +199,7 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
                     .map((service) => (
                       <Card key={service.id} className="overflow-hidden">
                         <CardHeader className="p-4">
-                          <CardTitle className="text-base">{service.name}</CardTitle>
+                          <CardTitle className="text-base">{service.name} ({service.city})</CardTitle>
                           <CardDescription>{service.service.name}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">

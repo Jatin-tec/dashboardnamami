@@ -2,7 +2,7 @@ export interface UserResponse {
   user: {
     name: string;
     email: string;
-    role: string;
+    role: 'admin' | 'customer' | 'manager' | 'captain';
     phone_number: string;
   };
   tokens: {
@@ -41,6 +41,7 @@ export interface Service {
 export interface SubscriptionType {
   id: number;
   service: Service;
+  city: string;
   name: string;
   frequency: string;
   price: number;
@@ -72,16 +73,11 @@ export interface Booking {
 export interface State {
   id: number;
   name: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface City {
   id: number;
   name: string;
-  state: State | number;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface UserCityAccess {
@@ -91,3 +87,4 @@ export interface UserCityAccess {
   created_at: string;
   updated_at: string;
 }
+

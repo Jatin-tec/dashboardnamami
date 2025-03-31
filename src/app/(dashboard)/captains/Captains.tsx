@@ -17,8 +17,9 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import CardGrid from "@/components/shared/CardGrid";
 
 import { captainsData, serviceCategories, statusOptions } from "@/data/mock";
+import { User } from "@/types/types";
 
-const Captains = () => {
+const Captains = ({ captains }: {captains: User}) => {
   const { toast } = useToast();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");

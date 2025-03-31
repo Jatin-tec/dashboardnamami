@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, ChevronDown, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,14 +13,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { getCities } from "@/lib/common/city";
+import { City } from "@/types/types";
 
-const CITIES = [
-  "All",
-  "Vidisha",
-];
 
 const AppHeader = () => {
-  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const cities = await getCities({ state_id: 1 })
+      if (cities.status === "error" || !cities.data) {
+        console.error(cities.message);
+        return;
+      }
+      setCities([{ id: 0, name: 'all' }, ...cities.data]);
+    })()
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background px-4 lg:px-6">
@@ -48,20 +58,20 @@ const AppHeader = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-1">
-              <span>{selectedCity}</span>
+              <span>{selectedCity?.name}</span>
               <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuLabel>Select City</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {CITIES.map((city) => (
+            {cities.map((city) => (
               <DropdownMenuItem
-                key={city}
+                key={city.id}
                 onClick={() => setSelectedCity(city)}
-                className={city === selectedCity ? "bg-accent/50" : ""}
+                className={city.name === selectedCity?.name ? "bg-accent/50" : ""}
               >
-                {city}
+                {city.name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
