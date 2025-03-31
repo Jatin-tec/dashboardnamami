@@ -10,16 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CardGrid from "@/components/shared/CardGrid";
 
-import { captainsData, serviceCategories, statusOptions } from "@/data/mock";
-import { User } from "@/types/types";
+import { serviceCategories, statusOptions } from "@/data/mock";
+import { Captain } from "@/types/types";
 
-const Captains = ({ captains }: {captains: User}) => {
+import { cn } from "@/lib/utils";
+
+
+const Captains = ({ captains }: { captains: Captain[] | null }) => {
   const { toast } = useToast();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -87,9 +91,21 @@ const Captains = ({ captains }: {captains: User}) => {
     {
       key: "status",
       label: "Status",
-      render: (value: string) => <StatusBadge status={value} />,
+      render: (value: string) => <Badge variant="outline" className={cn(
+        "capitalize font-medium",
+        value ? 'bg-green-100 text-green-800 hover:bg-green-100/80' : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+      )}
+      >
+        {value ? 'Active' : 'Inactive'}
+      </Badge>
     },
   ];
+
+  if (!captains) return (
+    <div className="flex h-full items-center justify-center">
+      <p className="text-muted-foreground">No captains found.</p>
+    </div>
+  )
 
   return (
     <>
@@ -126,14 +142,14 @@ const Captains = ({ captains }: {captains: User}) => {
 
       {viewMode === "grid" ? (
         <CardGrid columns={3}>
-          {captainsData.map((captain) => (
+          {captains.map((captain) => (
             <Card key={captain.id} className="overflow-hidden">
               <CardHeader className="p-4 pb-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={captain.avatar} alt={captain.name} />
-                      <AvatarFallback>{captain.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                      {/* <AvatarImage src={captain.avatar} alt={captain.name} /> */}
+                      <AvatarFallback>{captain.name?.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                     </Avatar>
                     <div className="grid gap-0.5">
                       <h3 className="text-base font-medium">{captain.name}</h3>
@@ -142,7 +158,13 @@ const Captains = ({ captains }: {captains: User}) => {
                       </div>
                     </div>
                   </div>
-                  <StatusBadge status={captain.status} />
+                  <Badge variant="outline" className={cn(
+                    "capitalize font-medium",
+                    captain.is_active ? 'bg-green-100 text-green-800 hover:bg-green-100/80' : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+                  )}
+                  >
+                    {captain.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-4">
@@ -182,7 +204,7 @@ const Captains = ({ captains }: {captains: User}) => {
       ) : (
         <DataTable
           columns={columns}
-          data={captainsData}
+          data={captains}
           onRowClick={handleViewCaptain}
           onView={handleViewCaptain}
           onEdit={handleEditCaptain}

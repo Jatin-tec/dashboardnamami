@@ -1,43 +1,32 @@
 import { useState, useEffect, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+// hooks
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
+// server actions
 import { getFormFields } from "@/app/(dashboard)/customers/server/actions/customer";
+// types
 import { FormFieldConfig } from "@/types/generic";
+import { City, State } from "@/types/types";
+// utils
+import { staticSchema, CustomerFormValues } from "@/app/(dashboard)/customers/utils/config";
+// lib
 import { getStates } from "@/lib/common/state";
 import { getCities } from "@/lib/common/city";
-import { City, State } from "@/types/types";
+import * as z from "zod";
 
-// Base schema for static fields
-const staticSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone_number: z.string()
-    .min(10, "Phone number must be at least 10 digits")
-    .regex(/^[0-9+\-\s]+$/, "Invalid phone format")
-    .optional()
-    .or(z.literal("")),
-  address: z.string().min(5, "Address must be at least 5 characters").max(200),
-  state: z.string().min(1, "State is required"),
-  city: z.string().min(1, "City is required"),
-});
-
-type CustomerFormValues = z.infer<typeof staticSchema> & Record<string, string | number | undefined>;
 
 interface CustomerFormProps {
-  initialData?: Partial<CustomerFormValues>;
   onSubmit: (data: CustomerFormValues) => void;
   onCancel: () => void;
 }
 
 const CustomerForm = ({
-  initialData = {},
   onSubmit,
   onCancel,
 }: CustomerFormProps) => {
@@ -127,12 +116,12 @@ const CustomerForm = ({
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      name: initialData.name || "",
-      email: initialData.email || "",
-      phone_number: initialData.phone_number || "",
-      address: initialData.address || "",
-      state: initialData.state || "",
-      city: initialData.city || "",
+      name: "",
+      email: "",
+      phone_number: "",
+      address: "",
+      state: "",
+      city: "",
     }
   });
 
@@ -153,7 +142,8 @@ const CustomerForm = ({
               variant: "destructive",
             });
           }
-        } catch (error) {
+        } catch (error: unknown) {
+          console.error("Error fetching cities:", error);
           toast({
             title: "Error",
             description: "Failed to load cities",
@@ -181,7 +171,8 @@ const CustomerForm = ({
         title: "Success",
         description: "Customer has been saved successfully",
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("Error saving customer:", error);
       toast({
         title: "Error",
         description: "Failed to save customer",
@@ -198,19 +189,19 @@ const CustomerForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Static Fields */}
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           <FormField
@@ -325,7 +316,7 @@ const CustomerForm = ({
                     {field.field_type === 'select' ? (
                       <Select
                         onValueChange={renderField.onChange}
-                        value={renderField.value}
+                        value={renderField.value !== undefined ? String(renderField.value) : undefined}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${field.field_name}`} />

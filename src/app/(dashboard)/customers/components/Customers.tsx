@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, } from "@/components/ui/avatar";
 
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
@@ -20,6 +20,7 @@ import CustomerForm from "@/components/forms/CustomerForm";
 import { customersData } from "@/data/mock"; // Assuming this is available
 import { Customer } from "@/types/types";
 import { createCustomer } from "../server/actions/customer";
+import { CustomerFormValues } from "../utils/config";
 
 import { cn } from "@/lib/utils";
 
@@ -28,9 +29,8 @@ const Customers = ({ customers }: { customers: Customer[] | null }) => {
   const router = useRouter();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const handleCreateCustomer = async (data: any) => {
-    console.log("New customer data:", data);
-    const response = await createCustomer(data);
+  const handleCreateCustomer = async (data: CustomerFormValues) => {
+    const response = await createCustomer(data as CustomerFormValues);
     console.log("Create customer response:", response);
     if (response.status === "error") {
       toast({
@@ -70,10 +70,9 @@ const Customers = ({ customers }: { customers: Customer[] | null }) => {
     {
       key: "name",
       label: "Customer Name",
-      render: (value: string, row: any) => (
+      render: (value: string) => (
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={row.avatar} alt={value} />
             <AvatarFallback>
               {value
                 ?.split(" ")
@@ -90,7 +89,7 @@ const Customers = ({ customers }: { customers: Customer[] | null }) => {
       label: "Email",
     },
     {
-      key: "phone_number", // Adjusted to match new code's key
+      key: "phone_number",
       label: "Phone",
     },
     {

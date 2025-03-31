@@ -5,6 +5,7 @@ import { fetchWithSession } from "@/utils/fetchWithSession";
 import { ActionResponse, FormFieldConfig } from "@/types/generic";
 import { Customer } from "@/types/types";
 import { revalidatePath } from "next/cache";
+import { CustomerFormValues } from "../../utils/config";
 
 
 export const getCustomers = async (): Promise<ActionResponse<Customer[] | null>> => {
@@ -18,17 +19,8 @@ export const getCustomerById = async (id: string): Promise<ActionResponse<Custom
     return response;
 }
 
-interface CustomerRequest {
-    name: string;
-    email: string;
-    phone_number: string;
-    state: string;
-    city: string;
-    address: string;
-}
-
-export const createCustomer = async (customer: CustomerRequest): Promise<ActionResponse<Customer | null>> => {
-    const response = await fetchWithSession<CustomerRequest, Customer>(apiPost, `/api/service/user/customer/`, customer);
+export const createCustomer = async (customer: CustomerFormValues): Promise<ActionResponse<Customer | null>> => {
+    const response = await fetchWithSession<CustomerFormValues, Customer>(apiPost, `/api/service/user/customer/`, customer);
     revalidatePath(`/customers`);
     return response;
 }

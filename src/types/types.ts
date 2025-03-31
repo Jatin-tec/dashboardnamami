@@ -29,6 +29,18 @@ export interface Customer {
   city: string;
 }
 
+export interface Captain {
+  id: number;
+  name: string;
+  email: string;
+  phone_number: string;
+  address: string;
+  is_active: boolean;
+  state: string;
+  city: string;
+  specialization: string;
+}
+
 export interface Service {
   city: string;
   service_code: string;

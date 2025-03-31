@@ -3,6 +3,6 @@ import { getCustomers } from "./server/actions/customer";
 
 export default async function Page() {
     const customers = await getCustomers();
-    console.log("Customers data:", customers);
+    console.log(customers, 'customers');
     return <Customers customers={customers.data}/>
 }

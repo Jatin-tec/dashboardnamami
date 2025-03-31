@@ -3,5 +3,6 @@ import { getCaptains } from './server/actions/captain';
 
 export default async function Page() {
     const captains = await getCaptains();
-    return <Captains captains={captains}/>
+    console.log(captains, 'captains');
+    return <Captains captains={captains.data}/>
 }
