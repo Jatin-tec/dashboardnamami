@@ -1,11 +1,13 @@
 'use client'
 import { useState, useMemo } from "react";
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
+
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, Grid3X3, List } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +18,13 @@ import DataTable from "@/components/shared/DataTable";
 import CardGrid from "@/components/shared/CardGrid";
 import { Badge } from "@/components/ui/badge";
 
-import { Service, SubscriptionType } from "@/types/types";
+import { Service } from "@/types/types";
 
 import { cn } from "@/lib/utils";
 
 import { statusOptions } from "@/data/mock";
 
-const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null }) => {
+const Services = ({ services }: { services: Service[] | null }) => {
 
   const { toast } = useToast();
 
@@ -31,13 +33,10 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("all");
 
-  console.log(subscriptions)
-
   const serviceCategories = useMemo(() => {
-    const uniqueServices = new Set(subscriptions?.map(sub => sub.service.name));
+    const uniqueServices = new Set(services?.map(sub => sub.name));
     return Array.from(uniqueServices);
-  }, [subscriptions]);
-
+  }, [services]);
 
   const handleCreateService = () => {
     toast({
@@ -47,21 +46,21 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
     setIsCreateDialogOpen(false);
   };
 
-  const handleViewService = (subscription: SubscriptionType) => {
-    router.push(`/services/${subscription.id}`);
+  const handleViewService = (service: Service) => {
+    router.push(`/services/${service.service_code}`);
   };
 
-  const handleEditService = (subscriptions: SubscriptionType) => {
+  const handleEditService = (service: Service) => {
     toast({
       title: "Edit service",
-      description: `Editing service: ${subscriptions.name}`,
+      description: `Editing service: ${service.name}`,
     });
   };
 
-  const handleDeleteService = (subscriptions: SubscriptionType) => {
+  const handleDeleteService = (service: Service) => {
     toast({
       title: "Service deleted",
-      description: `Service ${subscriptions.name} has been deleted.`,
+      description: `Service ${service.name} has been deleted.`,
       variant: "destructive",
     });
   };
@@ -70,11 +69,11 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
     {
       key: "name",
       label: "Service Name",
-    },
-    {
-      key: "service",
-      label: "Category",
-      render: (value: Service) => <span className="capitalize">{value.name}</span>
+      render: (value: string, row: Service) => (
+        <div className="flex items-center gap-2">
+          {value} ({row.city})
+        </div>
+      ),
     },
     {
       key: "price",
@@ -110,7 +109,7 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
       />
 
       <div className="mb-6">
-        <Tabs defaultValue="all" onValueChange={setSelectedTab}>
+        <Tabs defaultValue="all" onValueChange={setSelectedTab} value={selectedTab}>
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="all">All Services</TabsTrigger>
@@ -145,32 +144,29 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
           <TabsContent value="all" className="mt-4">
             {viewMode === "grid" ? (
               <CardGrid columns={3}>
-                {subscriptions?.map((subscription) => (
-                  <Card key={subscription.id} className="overflow-hidden">
+                {services?.map((service, key) => (
+                  <Card key={key} className="overflow-hidden">
                     <CardHeader className="p-4">
-                      <CardTitle className="text-base">{subscription.name} ({subscription.city})</CardTitle>
-                      <CardDescription>{subscription.service.name}</CardDescription>
+                      <CardTitle className="text-base">{service.name} ({service.city})</CardTitle>
+                      <CardDescription>{service.name}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
+                      <Image src={service.icon} alt={service.name} height={32} width={32} />
                       <div className="grid gap-1">
-                        <div className="text-sm">{subscription.service.description}</div>
-                        <div className="flex items-center justify-between pt-2">
-                          <span className="font-semibold">{subscription.price}</span>
-                          <span className="text-sm text-muted-foreground">{subscription.frequency}</span>
-                        </div>
+                        <div className="text-sm">{service.description}</div>
                       </div>
                     </CardContent>
                     <CardFooter className="flex justify-between p-4 pt-0">
                       <Badge variant="outline" className={cn(
                         "capitalize font-medium",
-                        subscription.is_active
+                        service.is_active
                           ? 'bg-green-100 text-green-800 hover:bg-green-100/80'
                           : 'bg-red-100 text-red-800 hover:bg-red-100/80'
                       )}
                       >
-                        {subscription.is_active ? 'Active' : 'Inactive'}
+                        {service.is_active ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Button size="sm" onClick={() => handleViewService(subscription)}>View</Button>
+                      <Button size="sm" onClick={() => handleViewService(service)}>View</Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -178,7 +174,7 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
             ) : (
               <DataTable
                 columns={columns}
-                data={subscriptions || []}
+                data={services || []}
                 onRowClick={handleViewService}
                 onView={handleViewService}
                 onEdit={handleEditService}
@@ -195,41 +191,37 @@ const Services = ({ subscriptions }: { subscriptions: SubscriptionType[] | null 
             <TabsContent key={category} value={category} className="mt-4">
               {viewMode === "grid" ? (
                 <CardGrid columns={3}>
-                  {subscriptions?.filter((subscription) => subscription.service.name === category)
-                    .map((service) => (
-                      <Card key={service.id} className="overflow-hidden">
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">{service.name} ({service.city})</CardTitle>
-                          <CardDescription>{service.service.name}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="grid gap-1">
-                            <div className="text-sm">{service.service.description}</div>
-                            <div className="flex items-center justify-between pt-2">
-                              <span className="font-semibold">{service.price}</span>
-                              <span className="text-sm text-muted-foreground">{service.frequency}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between p-4 pt-0">
-                          <Badge variant="outline" className={cn(
-                            "capitalize font-medium",
-                            service.is_active
-                              ? 'bg-green-100 text-green-800 hover:bg-green-100/80'
-                              : 'bg-red-100 text-red-800 hover:bg-red-100/80'
-                          )}
-                          >
-                            {service.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                          <Button size="sm" onClick={() => handleViewService(service)}>View</Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
+                  {services?.filter((service) => service.name === category).map((service, idx) => (
+                    <Card key={idx} className="overflow-hidden">
+                      <CardHeader className="p-4">
+                        <CardTitle className="text-base">{service.name} ({service.city})</CardTitle>
+                        <CardDescription>{service.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <Image src={service.icon} alt={service.name} height={32} width={32} />
+                        <div className="grid gap-1">
+                          <div className="text-sm">{service.description}</div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between p-4 pt-0">
+                        <Badge variant="outline" className={cn(
+                          "capitalize font-medium",
+                          service.is_active
+                            ? 'bg-green-100 text-green-800 hover:bg-green-100/80'
+                            : 'bg-red-100 text-red-800 hover:bg-red-100/80'
+                        )}
+                        >
+                          {service.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                        <Button size="sm" onClick={() => handleViewService(service)}>View</Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
                 </CardGrid>
               ) : (
                 <DataTable
                   columns={columns}
-                  data={subscriptions?.filter((service) => service.service.name === category) || []}
+                  data={services?.filter((service) => service.name === category) || []}
                   onRowClick={handleViewService}
                   onView={handleViewService}
                   onEdit={handleEditService}

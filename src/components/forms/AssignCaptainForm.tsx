@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Captain, Customer } from "@/types/types";
+import { getCaptains, getCustomers } from "@/app/(dashboard)/bookings/server/actions/bookings";
 
 // Define form schema with Zod
 const assignCaptainSchema = z.object({
@@ -25,19 +27,36 @@ type AssignCaptainFormValues = z.infer<typeof assignCaptainSchema>;
 
 interface AssignCaptainFormProps {
   bookingId: string;
-  captains: { id: string; username: string }[];
   onSubmit: (data: AssignCaptainFormValues) => void;
   onCancel: () => void;
 }
 
 const AssignCaptainForm = ({
   bookingId,
-  captains,
   onSubmit,
   onCancel,
 }: AssignCaptainFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captains, setCaptains] = useState<Captain[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const response = await getCaptains();
+      if (response.status === "success" && response.data) {
+        setCaptains(response.data);
+      } else {
+        toast({
+          title: "Error fetching customers",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+      setIsLoading(false);
+    }
+    fetchCustomers();
+  }, [toast]);
 
   // Initialize form with react-hook-form
   const form = useForm<AssignCaptainFormValues>({
@@ -94,7 +113,7 @@ const AssignCaptainForm = ({
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

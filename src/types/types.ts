@@ -42,10 +42,13 @@ export interface Captain {
 }
 
 export interface Service {
-  city: string;
   service_code: string;
+  city: string;
+  available_cities: string[];
   name: string;
   description: string;
+  slots: number;
+  gallery: string[];
   icon: string;
   is_active: boolean;
 }

@@ -19,12 +19,12 @@ import BookingForm from "@/components/forms/BookingForm";
 import AssignCaptainForm from "@/components/forms/AssignCaptainForm";
 
 import {
-  bookingsData,
   captainsData,
   servicesList,
   statusOptions,
   customersData,
 } from "@/data/mock";
+import { Booking } from "@/types/types";
 
 // Sample subscription types for demo
 const subscriptionTypesData = [
@@ -73,16 +73,16 @@ const servicesForBooking = servicesList.map((s) => ({
   name: s.name,
 }));
 
-const Bookings = () => {
-  const { toast } = useToast();
+const Bookings = ({ bookings }: { bookings: Booking[] | null }) => {
   const router = useRouter();
+  const { toast } = useToast();
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isAssignCaptainDialogOpen, setIsAssignCaptainDialogOpen] =
-    useState(false);
+  const [isAssignCaptainDialogOpen, setIsAssignCaptainDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
-  const handleCreateBooking = (data: any) => {
-    console.log("New booking data:", data);
+  const handleCreateBooking = (booking: Booking) => {
+    console.log("New booking data:", booking);
     toast({
       title: "Booking created",
       description: "New booking has been created successfully.",
@@ -90,26 +90,26 @@ const Bookings = () => {
     setIsCreateDialogOpen(false);
   };
 
-  const handleViewBooking = (booking: any) => {
-    router.push(`/bookings/${booking.id}`);
+  const handleViewBooking = (booking: Booking) => {
+    router.push(`/bookings/${booking.booking_id}`);
   };
 
-  const handleEditBooking = (booking: any) => {
+  const handleEditBooking = (booking: Booking) => {
     toast({
       title: "Edit booking",
-      description: `Editing booking: ${booking.id}`,
+      description: `Editing booking: ${booking.booking_id}`,
     });
   };
 
-  const handleDeleteBooking = (booking: any) => {
+  const handleDeleteBooking = (booking: Booking) => {
     toast({
       title: "Booking deleted",
-      description: `Booking ${booking.id} has been deleted.`,
+      description: `Booking ${booking.booking_id} has been deleted.`,
       variant: "destructive",
     });
   };
 
-  const handleAssignCaptain = (booking: any) => {
+  const handleAssignCaptain = (booking: Booking) => {
     setSelectedBooking(booking);
     setIsAssignCaptainDialogOpen(true);
   };
@@ -124,11 +124,11 @@ const Bookings = () => {
 
   const columns = [
     {
-      key: "id",
+      key: "booking_id",
       label: "Booking ID",
     },
     {
-      key: "customer",
+      key: "user",
       label: "Customer",
     },
     {
@@ -136,18 +136,22 @@ const Bookings = () => {
       label: "Service",
     },
     {
-      key: "date",
+      key: "subscription",
+      label: "Subscription",
+    },
+    {
+      key: "scheduled_date",
       label: "Date",
-      render: (value: string, row: any) => (
+      render: (value: string) => (
         <div>
-          {value} - {row.time}
+          {value}
         </div>
       ),
     },
     {
       key: "captain",
       label: "Captain",
-      render: (value: string, row: any) => {
+      render: (value: string, row: Booking) => {
         if (!value || value === "Unassigned") {
           return (
             <button
@@ -165,15 +169,17 @@ const Bookings = () => {
       },
     },
     {
-      key: "amount",
-      label: "Amount",
-    },
-    {
       key: "status",
       label: "Status",
       render: (value: string) => <StatusBadge status={value} />,
     },
   ];
+
+  if (!bookings) {
+    return <div className="flex h-full items-center justify-center">
+      <p className="text-muted-foreground">No bookings available.</p>
+    </div>;
+  }
 
   return (
     <>
@@ -210,8 +216,7 @@ const Bookings = () => {
         <TabsContent value="all" className="mt-6">
           <DataTable
             columns={columns}
-            data={bookingsData}
-            onRowClick={handleViewBooking}
+            data={bookings}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
@@ -225,10 +230,9 @@ const Bookings = () => {
         <TabsContent value="scheduled" className="mt-6">
           <DataTable
             columns={columns}
-            data={bookingsData.filter(
+            data={bookings.filter(
               (booking) => booking.status === "scheduled",
             )}
-            onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
@@ -238,10 +242,9 @@ const Bookings = () => {
         <TabsContent value="ongoing" className="mt-6">
           <DataTable
             columns={columns}
-            data={bookingsData.filter(
+            data={bookings.filter(
               (booking) => booking.status === "ongoing",
             )}
-            onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
@@ -251,10 +254,9 @@ const Bookings = () => {
         <TabsContent value="completed" className="mt-6">
           <DataTable
             columns={columns}
-            data={bookingsData.filter(
+            data={bookings.filter(
               (booking) => booking.status === "completed",
             )}
-            onRowClick={handleViewBooking}
             onView={handleViewBooking}
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
@@ -296,7 +298,6 @@ const Bookings = () => {
           </DialogHeader>
           <AssignCaptainForm
             bookingId={selectedBooking?.id || ""}
-            captains={captainsForBooking}
             onSubmit={handleCaptainAssigned}
             onCancel={() => setIsAssignCaptainDialogOpen(false)}
           />

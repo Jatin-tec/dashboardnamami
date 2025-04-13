@@ -1,7 +1,9 @@
-import { getSubscriptions } from "./server/actions/services";
+import { getServices } from "./server/actions/services";
 import Services from "./components/Services";
 
 export default async function Page() {
-    const subscriptions = await getSubscriptions();
-    return <Services subscriptions={subscriptions.data} />
+    const services = await getServices();
+
+    console.log(services);
+    return <Services services={services.data} />
 }

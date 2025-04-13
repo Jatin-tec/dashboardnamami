@@ -41,7 +41,6 @@ const CustomerForm = ({
   useEffect(() => {
     const fetchFormFields = async () => {
       const formFields = await getFormFields();
-      console.log(formFields, 'formFields')
       if (formFields.status === "success" && formFields.data) {
         setDynamicFields(formFields.data);
       } else {

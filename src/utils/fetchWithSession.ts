@@ -1,7 +1,8 @@
-import { getSession, logout } from "@/lib/auth/session";
+import { getSession } from "@/lib/auth/session";
 import { ActionResponse } from "@/types/generic";
 import { catchError } from "@/utils/catchError";
 import { apiPost, apiPut } from "./apiHandler";
+import { getSelectedCity } from "@/lib/common/city";
 
 type RequestFunction<Body, Response> =
     | ((endpoint: string, options?: RequestInit) => Promise<Response | null>)
@@ -18,6 +19,8 @@ export async function fetchWithSession<Body = undefined, Data = unknown>(
     options: RequestInit = {},
 ): Promise<ActionResponse<Data | null>> {
     const session = await getSession();
+    const selectedCityId = (await getSelectedCity()).id
+
     if (!session) {
         return {
             message: "User not logged in",
@@ -30,10 +33,14 @@ export async function fetchWithSession<Body = undefined, Data = unknown>(
     // Dynamically determine the arguments based on the function signature
     const isBodyRequired =
         requestFunction === apiPost || requestFunction === apiPut;
-    const headers = {
+    const headers = selectedCityId ? {
         ...options.headers,
-        Authorization: `Bearer ${session.tokens.access}`,
-    };
+        'Authorization': `Bearer ${session.tokens.access}`,
+        'Selected-Cities': JSON.stringify([(selectedCityId)]),
+    } : {
+        ...options.headers,
+        'Authorization': `Bearer ${session.tokens.access}`,
+    }
 
     const [error, data] = await catchError(
         isBodyRequired

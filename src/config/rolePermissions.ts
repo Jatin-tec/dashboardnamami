@@ -1,9 +1,9 @@
 // config/rolePermissions.js
 
 export const roleRoutes = {
-    admin: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized"],
+    admin: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized", "/jobs/*"],
     customer: [""],
-    manager: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized"],
+    manager: ["/", "/services/*", "/bookings/*", "/captains/*", "/customers/*", "/unauthorized", "/jobs/*"],
     captain: ["/pos/*", "/table", "/unauthorized"],
 };
 

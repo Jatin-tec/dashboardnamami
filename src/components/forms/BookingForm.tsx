@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -9,7 +9,6 @@ import { format } from "date-fns";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,19 +20,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Clock } from "lucide-react";
+import { Captain, City, Customer, SubscriptionType } from "@/types/types";
+import { getCaptains, getCustomers, getSubscriptions } from "@/app/(dashboard)/bookings/server/actions/bookings";
+import { getCities } from "@/lib/common/city";
 
 // Define form schema with Zod
 const bookingSchema = z.object({
+  city: z.string().min(1, "City is required"),
   customer: z.string().min(1, "Customer is required"),
   service: z.string().min(1, "Service is required"),
-  date: z.date({
-    required_error: "Date is required",
-  }),
+  date: z.date({ required_error: "Date is required" }),
   time: z.string().min(1, "Time is required"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
+  address: z.string().optional(),
   captain: z.string().optional(),
   notes: z.string().optional(),
   create_subscription: z.boolean().default(false),
@@ -44,26 +44,66 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 
 interface BookingFormProps {
   initialData?: Partial<BookingFormValues>;
-  customers?: { id: string; username: string }[];
-  services?: { service_code: string; name: string }[];
-  captains?: { id: string; username: string }[];
-  subscriptionTypes?: { id: number; name: string; service: { service_code: string, name: string } }[];
   onSubmit: (data: BookingFormValues) => void;
   onCancel: () => void;
 }
 
 const BookingForm = ({
   initialData = {},
-  customers = [],
-  services = [],
-  captains = [],
-  subscriptionTypes = [],
   onSubmit,
   onCancel,
 }: BookingFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedService, setSelectedService] = useState(initialData.service || "");
+  const [selectedCity, setSelectedCity] = useState(initialData.city || "");
+
+  const [cities, setCities] = useState<City[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [services, setServices] = useState<SubscriptionType[]>([]);
+  const [captains, setCaptains] = useState<Captain[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      const response = await getCities();
+      if (response.status === "success" && response.data) {
+        setCities(response.data);
+      } else {
+        toast({
+          title: "Error fetching cities",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
+    }
+    fetchCities();
+  }, [toast]);
+
+
+  // Fetch data when city changes
+  useEffect(() => {
+    const fetchCityData = async () => {
+      if (!selectedCity) return;
+
+      console.log(selectedCity, 'selectedCity')
+      setIsLoading(true);
+      // Fetch customers, services and captains for selected city
+      const [customersRes, servicesRes, captainsRes] = await Promise.all([getCustomers(selectedCity), getSubscriptions(selectedCity), getCaptains(selectedCity)]);
+      if (customersRes.data && servicesRes.data && captainsRes.data) {
+        setCustomers(customersRes.data);
+        setServices(servicesRes.data);
+        setCaptains(captainsRes.data);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch city data",
+          variant: "destructive",
+        });
+      }
+      setIsLoading(false);
+    };
+    fetchCityData();
+  }, [selectedCity, toast]);
 
   // Initialize form with react-hook-form
   const form = useForm<BookingFormValues>({
@@ -80,19 +120,6 @@ const BookingForm = ({
       subscription_type: initialData.subscription_type || "",
     },
   });
-
-  // Filter subscription types based on selected service
-  const filteredSubscriptionTypes = subscriptionTypes.filter(
-    type => type.service.service_code === selectedService
-  );
-
-  // Handle service change to filter subscription types
-  const handleServiceChange = (serviceCode: string) => {
-    setSelectedService(serviceCode);
-    form.setValue("service", serviceCode);
-    // Reset subscription type if service changes
-    form.setValue("subscription_type", "");
-  };
 
   const handleSubmit = async (values: BookingFormValues) => {
     try {
@@ -114,25 +141,72 @@ const BookingForm = ({
     }
   };
 
+  const handleCityChange = (cityId: string) => {
+    setSelectedCity(cityId);
+    form.setValue("city", cityId);
+    // Reset dependent fields
+    form.resetField("customer");
+    form.resetField("service");
+    form.resetField("captain");
+  };
+
+
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <Select
+                onValueChange={handleCityChange}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a city" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {cities.map((city, key) => (
+                    <SelectItem key={key} value={city.id.toString()}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="customer"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Customer</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!selectedCity || isLoading}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a customer" />
+                    {isLoading ? (
+                      <span>Loading customers...</span>
+                    ) : (
+                      <SelectValue placeholder="Select a customer" />
+                    )}
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                   {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.username}
+                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                      {customer.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -148,19 +222,59 @@ const BookingForm = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Service</FormLabel>
-              <Select 
-                onValueChange={handleServiceChange} 
-                defaultValue={field.value}
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!selectedCity || isLoading}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a service" />
+                    {isLoading ? (
+                      <span>Loading services...</span>
+                    ) : (
+                      <SelectValue placeholder="Select a service" />
+                    )}
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.service_code} value={service.service_code}>
-                      {service.name}
+                  {services.map((service, key) => (
+                    <SelectItem key={key} value={service.id.toString()}>
+                      {service.name} {service.service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Captain Field - Now depends on city */}
+        <FormField
+          control={form.control}
+          name="captain"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Captain (Optional)</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!selectedCity || isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    {isLoading ? (
+                      <span>Loading captains...</span>
+                    ) : (
+                      <SelectValue placeholder="Assign a captain (optional)" />
+                    )}
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {captains.map((captain) => (
+                    <SelectItem key={captain.id} value={captain.id.toString()}>
+                      {captain.name} {captain.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -220,10 +334,10 @@ const BookingForm = ({
                 <FormControl>
                   <div className="relative">
                     <Clock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      type="time" 
+                    <Input
+                      type="time"
                       className="pl-9"
-                      {...field} 
+                      {...field}
                     />
                   </div>
                 </FormControl>
@@ -238,9 +352,9 @@ const BookingForm = ({
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Service Address</FormLabel>
+              <FormLabel>Service Address (Optional)</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Enter full address where service will be performed"
                   className="resize-none"
                   {...field}
@@ -253,105 +367,12 @@ const BookingForm = ({
 
         <FormField
           control={form.control}
-          name="captain"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Captain (Optional)</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Assign a captain (optional)" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {captains.map((captain) => (
-                    <SelectItem key={captain.id} value={captain.id}>
-                      {captain.username}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                You can assign a captain now or later
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="create_subscription"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>Create Subscription</FormLabel>
-                <FormDescription>
-                  Create a recurring subscription for this customer
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        {form.watch("create_subscription") && (
-          <FormField
-            control={form.control}
-            name="subscription_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Subscription Plan</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  disabled={!selectedService}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a subscription plan" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {filteredSubscriptionTypes.length > 0 ? (
-                      filteredSubscriptionTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        No subscription plans available for this service
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select a subscription plan for recurring service
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <FormField
-          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Any special instructions or notes for this booking"
                   className="resize-none"
                   {...field}
@@ -361,7 +382,7 @@ const BookingForm = ({
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

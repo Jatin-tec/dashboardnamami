@@ -142,7 +142,8 @@ const Captains = ({ captains }: { captains: Captain[] | null }) => {
 
       {viewMode === "grid" ? (
         <CardGrid columns={3}>
-          {captains.map((captain) => (
+
+          {captains.length ? captains.map((captain) => (
             <Card key={captain.id} className="overflow-hidden">
               <CardHeader className="p-4 pb-0">
                 <div className="flex items-center justify-between">
@@ -199,7 +200,11 @@ const Captains = ({ captains }: { captains: Captain[] | null }) => {
                 </Button>
               </CardFooter>
             </Card>
-          ))}
+          )) : (
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground">No captains found.</p>
+            </div>
+          )}
         </CardGrid>
       ) : (
         <DataTable

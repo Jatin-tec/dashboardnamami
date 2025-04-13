@@ -18,8 +18,6 @@ export default async function middleware(
 
   const session: Session | null = await getSession();
 
-  if (!session) return NextResponse.redirect(new URL("/login", request.nextUrl));
-
   const isPublicRoute: boolean = publicRoutes.includes(path);
   const role = session?.user?.role;
 

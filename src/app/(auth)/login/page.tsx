@@ -39,6 +39,8 @@ export default function LoginForm({
   const { toast } = useToast();
   const router = useRouter(); 
 
+  console.log('login page')
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,7 +54,7 @@ export default function LoginForm({
     if (state.message) {
       toast({
         title: state.message,
-        variant: state.status,
+        variant: state.status === "success" ? "default" : "destructive",
       });
     }
     if (state.status === "success") {

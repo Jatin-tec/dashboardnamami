@@ -1,11 +1,11 @@
-import { getServicesId } from "../server/actions/services";
+import { getServicesDetail } from "../server/actions/services";
 import ServiceDetail from "./ServiceDetail";
 
 export default async function Page({ params }: { params: Promise<{ service_code: string }> }) {
   const { service_code } = await params;
-  const subscription = await getServicesId(service_code);
+  const service = await getServicesDetail(service_code);
 
-  console.log("subscription", subscription);
+  console.log("subscription", service);
 
-  return <ServiceDetail subscription={subscription.data} />
+  return <ServiceDetail service={service.data} />
 }
